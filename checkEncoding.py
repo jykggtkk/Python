@@ -19,7 +19,7 @@ import chardet
 import codecs
 import shutil  
 #修改编码格式
-def check_Encoding(path,targetFile):
+def check_Encoding(path):
     result=True
     try:
         #获取系统简称
@@ -40,9 +40,12 @@ def check_Encoding(path,targetFile):
         #print "sourceEncoding:",sourceEncoding
         #写入info 
         info="system's name:"+systemName+";pathName:"+pathName+";file's name:"+fileName+";file's size:"+str(fileSize)+";file's Encoding:"+str(sourceEncoding)+"\n"
+        
+        #targetFile=open("/mdp/shell/odm/config/codecs.info","w+")
         #targetFile.writelines(info.decode('UTF-8','ignore'))
+        #targetFile.close()
         return  info
-      
+
     except Exception  as err:
         print(err)
         result=False
@@ -62,20 +65,19 @@ def explore(dir):
     for root,dirs,files in os.walk(dir):
         for file in files:
             path=os.path.join(root,file)  
-            info=check_Encoding(path,targetFile)
-            print info 
+            info=check_Encoding(path)
+            print info
             targetFile.writelines(info.decode('UTF-8','ignore'))
     targetFile.close()
 
 def main():
-    sourcePath=sys.argv[1] 
+    sourcePath=sys.argv[1]  
+    if   (os.path.isfile(sourcePath)): 
+             info=check_Encoding(sourcePath)
+             print info
+    elif (os.path.isdir(sourcePath)):
+             explore(sourcePath)
 
-    if   (os.path.isfile(sourcePath)):
-            change_Encoding(sourcePath)
-    elif os.path.isdir(sourcePath):
-            explore(sourcePath)
- 
- 
  
 if __name__ == '__main__': 
     #设置环境编码
