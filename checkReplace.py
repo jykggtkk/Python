@@ -8,7 +8,7 @@
            无法解决最后一个字段存在换行符时具体换行后的数据归属上一行最后一个字段还是下一行第一个
            字段
            函数化检查和替换，便于重复调用
-#测试：    还有一些情况可能不支持，暂时没办法了： 比如一行多个字段有多个回车符的情况
+#测试：    还有一些情况可能不支持，暂时没办法了： 比如一行多个字段有回车符的情况
 '''
 import sys
 import os
@@ -173,7 +173,7 @@ def main():
         #2.0检查首行字段个数是否正确,首字段个数不对直接退出，可能是文本结构与登记结构不一致
         realNum=checkFirstLine(fileName,checkNum,splitStr)
         if realNum!=checkNum:
-            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum,realNum))
+            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum))
             sys.exit(1)
         #3.0检查每行字段个数是否正确
         resultDict=checkLines(fileName,checkNum,splitStr)
