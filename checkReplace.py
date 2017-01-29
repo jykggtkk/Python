@@ -92,21 +92,36 @@ def  replaceLines(fileName,checkNum,splitStr):
                     tempLine=line.replace("\n","")+getDownLine(fileName,lineNumber)
                     if(tempLine.count(splitStr)!=checkNum):
                         #第一次合并了下一行后检查还是不够，说明还存在分隔符，需要跟下一行合并
+                        print "STILL WRONG"
                         downEndFlag=1
                         firstFlag=1
                 #下一行要跳过
                 skipFlag=1
-                middleFlag=0
+                middleFlag=0    
             else:
                 #其实，当该字段出现多个换行符时，最后一个在替换前的skipFlag状态位一定是：1，因为其他换行符的处理都在第一个if流程里走了 未重置skipFlag
                 #因此最后一步替换可以放在skipFlag=1的情况下处理，处理完再判断downEndFlag
                 #该行跳过打印，但当 if(downEndFlag==1)时，还是要把本行并到tempLine里去的  
-                if(downEndFlag==1):
+                """if(downEndFlag==1):
                     tempLine=tempLine+line.replace("\n","")
                     #如果这次合并之后没问题了  downEndFlag就置0
                     if(tempLine.count(splitStr)==checkNum):
-                        print"2still lose"
+                        print "合并分隔符个数对了"
+                        downEndFlag=0"""
+                #一个字段多次换行的情况，最后一次就走这里那必然分隔符是对的了
+                if(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)==checkNum):
+                    tempLine=tempLine+line.replace("\n","")
+                    print " ONE COLUMN CHANGE RIGHT"
+                    downEndFlag=0
+                #多字段存在分隔符情况,依据是合并后的分隔符还是不能跟检查值匹配，但还是有漏洞
+                elif(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)!=checkNum):
+                    tempLine=tempLine+getDownLine(fileName,lineNumber)
+                    if(tempLine.count(splitStr)==checkNum):
+                        print " MUTTLE COLUMNS RIGHT"
                         downEndFlag=0
+                    else:
+                        print " MUTTLE COLUMNS STILL WRONG"
+                        downEndFlag=1
                 #打印
                 skipFlag=0
                 middleFlag=1
@@ -128,9 +143,9 @@ def  replaceLines(fileName,checkNum,splitStr):
         print "newLine:"+newLine
         print "tempLine:"+tempLine
         print "line:" +line
-        #打印中间结果
+        #打印中间结果，第一行因为newline还没有值不打印
         if(writeFlag==1 and lineNumber>0 and middleFlag==0):
-            print "MIDDLE PUTLINEnewLine:"+newLine
+            print "MIDDLE PUTLINE newLine:"+newLine
             targetFile.write(newLine+"\n")
             #再置回默认值
             writeFlag=0
@@ -147,7 +162,7 @@ def  replaceLines(fileName,checkNum,splitStr):
     os.rename(fileName, os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".delete")
     os.rename(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change", fileName)
 
-#函数5，合并文件本行和下一行数据
+#函数5，获取对应行数的下一行数据
 def getDownLine(fileName,errorLine):
     checkFile=open(fileName)
     line=checkFile.readlines()[errorLine+1]
