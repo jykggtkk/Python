@@ -92,7 +92,7 @@ def  replaceLines(fileName,checkNum,splitStr):
                     tempLine=line.replace("\n","")+getDownLine(fileName,lineNumber)
                     if(tempLine.count(splitStr)!=checkNum):
                         #第一次合并了下一行后检查还是不够，说明还存在分隔符，需要跟下一行合并
-                        print "STILL WRONG"
+                        '''print "STILL WRONG"'''#调试用代码
                         downEndFlag=1
                         firstFlag=1
                 #下一行要跳过
@@ -111,16 +111,16 @@ def  replaceLines(fileName,checkNum,splitStr):
                 #一个字段多次换行的情况，最后一次就走这里那必然分隔符是对的了
                 if(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)==checkNum):
                     tempLine=tempLine+line.replace("\n","")
-                    print " ONE COLUMN CHANGE RIGHT"
+                    '''print " ONE COLUMN CHANGE RIGHT"'''#调试用代码
                     downEndFlag=0
                 #多字段存在分隔符情况,依据是合并后的分隔符还是不能跟检查值匹配，但还是有漏洞
                 elif(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)!=checkNum):
                     tempLine=tempLine+getDownLine(fileName,lineNumber)
                     if(tempLine.count(splitStr)==checkNum):
-                        print " MUTTLE COLUMNS RIGHT"
+                        '''print " MUTTLE COLUMNS RIGHT"'''#调试用代码
                         downEndFlag=0
                     else:
-                        print " MUTTLE COLUMNS STILL WRONG"
+                        '''print " MUTTLE COLUMNS STILL WRONG"'''#调试用代码
                         downEndFlag=1
                 #打印
                 skipFlag=0
@@ -133,8 +133,8 @@ def  replaceLines(fileName,checkNum,splitStr):
             middleFlag=0
         else:
             pass
-        #满足标识条件才能写
-        print "writeFlag:"+str(writeFlag)
+        #满足标识条件才能写 #调试用代码
+        '''print "writeFlag:"+str(writeFlag)
         print "lineNumber:"+str(lineNumber)
         print "downEndFlag:"+str(downEndFlag)
         print "skipFlag:"+str(skipFlag)
@@ -142,16 +142,16 @@ def  replaceLines(fileName,checkNum,splitStr):
         print "firstFlag:"+str(firstFlag)
         print "newLine:"+newLine
         print "tempLine:"+tempLine
-        print "line:" +line
+        print "line:" +line'''
         #打印中间结果，第一行因为newline还没有值不打印
         if(writeFlag==1 and lineNumber>0 and middleFlag==0):
-            print "MIDDLE PUTLINE newLine:"+newLine
+            '''print "MIDDLE PUTLINE newLine:"+newLine'''
             targetFile.write(newLine+"\n")
             #再置回默认值
             writeFlag=0
         lineNumber=lineNumber+1
     #最后一行数据额外打印
-    print "LAST PUTLINE tempLine:"+tempLine
+    '''print "LAST PUTLINE tempLine:"+tempLine''' #调试用代码
     targetFile.write(tempLine+"\n")
     #关闭文件
     checkFile.close()
@@ -188,7 +188,7 @@ def main():
         #2.0检查首行字段个数是否正确,首字段个数不对直接退出，可能是文本结构与登记结构不一致
         realNum=checkFirstLine(fileName,checkNum,splitStr)
         if realNum!=checkNum:
-            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum))
+            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum+1))
             sys.exit(1)
         #3.0检查每行字段个数是否正确
         resultDict=checkLines(fileName,checkNum,splitStr)
