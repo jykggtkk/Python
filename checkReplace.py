@@ -1,20 +1,39 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 '''
-#脚本功能：校验数据文本，检查每行字段个数是否匹配数据库表字段个数,并对存在的非法换行符进行替换
-#输入参数：文本名称带绝对路径，正确的字段个数校验值，分隔符字符
-#初次编写日期：2017-01-23
-#说明：    整合check功能和替换功能，其中特别说明，替换策略默认首字段不会出现换行符，否则逻辑陷阱
-           无法解决最后一个字段存在换行符时具体换行后的数据归属上一行最后一个字段还是下一行第一个
-           字段
-           函数化检查和替换，便于重复调用
-#测试：    还有一些情况可能不支持，暂时没办法了： 比如一行多个字段有回车符的情况
+Script function: Check the data text,determine the number of fields in every rows 
+whether can match the number of database table fields or not.In some scenarios can 
+repair the data text by merging rows.finally if it can't be repaired then output 
+the error messages.
+
+Instruction：Integrate the functions of check.py and repair.py.specially,the repair
+function can work in only this scenario: The first field does not appear to have 
+newline characters,otherwise it can't be detemined whether the rows that the number 
+of the separators is zero is belong to the previous row or the latter one.That is a 
+logical trap.
+
+Parameters: Text name with absolute path;The correct number of database table fields;
+separator character.For example:
+python checkReplace.py  /mdp/odm/kn/kn_kna_acct.txt 20 ~@~
+
+Bugs: In Some scenarios there is some problems,when using it please be careful:
+      1.when used in linux environment, separator character ~ can't be support by 
+      the check function.Maybe some other character too.  
+      2.when more than one fields exist newline characters in one row,the repair 
+      function can't support it.
+
+First code date：2017-01-23
+
+Last update : 2017-06-17
+
+Author: duwj@sunline.cn
 '''
 import sys
 import os
 import time
-#函数1，判断是否为空文件
+
 def  checkFileNull(fileName):
+#def one:Determines whether the text is empty
     checkFile=open(fileName)
     num=len(checkFile.read())
     if num==0:
@@ -23,14 +42,15 @@ def  checkFileNull(fileName):
       noneFlag=0
     checkFile.close()
     return noneFlag
-#函数2，判断首行分隔符个数是否正确
+
 def  checkFirstLine(fileName,checkNum,splitStr):
+#def two:Get the number of separators in the first row
     checkFile=open(fileName)
-    #1.0.5获取首行字段分隔符个数
     realNum=checkFile.readline().count(splitStr)
     return realNum
-#函数3，判断每一行分隔符是否正确,只判断不替换
+
 def  checkLines(fileName,checkNum,splitStr):
+#def three:Determine whether the number of separators is correct in every rows
     checkFile=open(fileName)
     lineNumber=0
     lines=checkFile.readlines()
@@ -49,38 +69,35 @@ def  checkLines(fileName,checkNum,splitStr):
     resultDict={'lineNumber':lineNumber,'splitNumber':splitNumber,'checkFlag':checkFlag}
     checkFile.close()
     return resultDict
-#函数4，替换，替换完毕后继续调用checkLines进行检查新文件
+
 def  replaceLines(fileName,checkNum,splitStr):
-    #打开文件和目标文件
+#def four:Merge the wront rows, then call def checkLines to check the new file
     checkFile=open(fileName)
     targetFile=open(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change",'w')
     lines=checkFile.readlines()
     lineNumber=0
-    #一开始写关闭
-    writeFlag=0
-    #与上一行合并的需要获取上一行数据
-    tempLine = ""
-    #额外获取一行后还是要 0 不跳
-    skipFlag=0
-    #中间是否打印标识 0打印
-    middleFlag=0
-    #中间字段多换行符标识
-    downEndFlag=0
-    #中间字段出现换行符时第一次不重复写标识
-    firstFlag=0
+     
+    writeFlag=0 #First write off  
+    tempLine = "" #template line to merge the previous row and the wrong row
+    skipFlag=0 #whether skip the next line or not,first not 
+    middleFlag=0 #whether output the templine or not, first not 
+    downEndFlag=0 #whether multple newLine characters exist in one of the centre fields or not, first not
+    firstFlag=0 #whether need to output in first time when multple newLine characters exist in the centre fields
 
     for line in lines:
         if not line:
             break
         elif line.count(splitStr)==0:
-            #分隔符为0，那么前面那行就不能写到目标文本里去
-            writeFlag=0
-            #将上一行跟本行合并
-            #当中间某字段多个换行符时，属于非末尾字段换行情况的，要略过这一步，否则会导致数据重复
+            writeFlag=0 #the number of separator is 0,that means the previous row is not right,can't be output
+
+            #merge the previous row and this row
+            #when it is multple newLine characters in the centre fields maked it's  number of separator
+            #is zero.It still can't be output now.Otherwise it cause data duplication.
             if(firstFlag==0):
                 tempLine=tempLine+line.replace("\n","")
             middleFlag=0
             firstFlag=0
+
         elif line.count(splitStr) < checkNum and line.count(splitStr) > 0:
             #分隔符为大于0时，可以判定前面那行可以写进去（即使不等于checkNum，上一行也已经正确
             writeFlag=1
@@ -122,7 +139,7 @@ def  replaceLines(fileName,checkNum,splitStr):
                     else:
                         '''print " MUTTLE COLUMNS STILL WRONG"'''#调试用代码
                         downEndFlag=1
-                #打印
+                #output open 
                 skipFlag=0
                 middleFlag=1
         elif line.count(splitStr)==checkNum:
@@ -133,8 +150,10 @@ def  replaceLines(fileName,checkNum,splitStr):
             middleFlag=0
         else:
             pass
-        #满足标识条件才能写 #调试用代码
-        '''print "writeFlag:"+str(writeFlag)
+        #Only can be print when satisfy all condition
+        '''
+        #debug
+        print "writeFlag:"+str(writeFlag)
         print "lineNumber:"+str(lineNumber)
         print "downEndFlag:"+str(downEndFlag)
         print "skipFlag:"+str(skipFlag)
@@ -150,13 +169,13 @@ def  replaceLines(fileName,checkNum,splitStr):
             #再置回默认值
             writeFlag=0
         lineNumber=lineNumber+1
-    #最后一行数据额外打印
-    '''print "LAST PUTLINE tempLine:"+tempLine''' #调试用代码
+    #Output the last line.
+    '''print "LAST PUTLINE tempLine:"+tempLine''' #debug
     targetFile.write(tempLine+"\n")
-    #关闭文件
+
     checkFile.close()
     targetFile.close()
-    #文件替换
+    #replace file
     if(os.path.isfile(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".delete")):
         os.remove(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".delete")
     os.rename(fileName, os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".delete")
@@ -175,7 +194,7 @@ def main():
     checkNum=int(sys.argv[2])
     splitStr=sys.argv[3]
 
-    #checkNum 需要减1
+    #checkNum minus one
     checkNum=checkNum-1
 
     #确定输入的是文件名
@@ -185,7 +204,8 @@ def main():
         if noneFlag==1:
             print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[INFO]The file is null!"
             sys.exit(0)
-        #2.0检查首行字段个数是否正确,首字段个数不对直接退出，可能是文本结构与登记结构不一致
+        #2.0Determine whether the number of separators is correct in the first row. 
+        #if not,Exit and output error messages 
         realNum=checkFirstLine(fileName,checkNum,splitStr)
         if realNum!=checkNum:
             print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum+1))
@@ -212,7 +232,7 @@ def main():
         sys.exit(1)
 
 if __name__ == '__main__': 
-    #设置环境编码
+    #Setting environment character set
     reload(sys)
     sys.setdefaultencoding('utf8')
     main()
