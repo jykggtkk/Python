@@ -23,7 +23,6 @@ Bugs: In Some scenarios there is some problems,when using it please be careful:
       2.when more than one fields exist newline characters in one row,the repair 
       function can't support it.
 
-
 First code date：2017-01-23
 
 Last update : 2017-06-17
@@ -154,7 +153,7 @@ def  replaceLines(fileName,checkNum,splitStr):
         if(writeFlag==1 and lineNumber>0 and middleFlag==0):
             '''print "MIDDLE PUTLINE newLine:"+newLine'''
             targetFile.write(newLine+"\n")
-            #再置回默认值
+            #back to 0 
             writeFlag=0
         lineNumber=lineNumber+1
     #Output the last line.
@@ -185,7 +184,7 @@ def main():
     #the number of separators is equal to the number of fields minus 1
     checkNum=checkNum-1
 
-    #确定输入的是文件名 make sure file name 
+    #make sure file name 
     if(os.path.isfile(fileName)): 
         #1.0 if the file is empty,exit  
         noneFlag=checkFileNull(fileName)
