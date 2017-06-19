@@ -10,7 +10,8 @@ Instruction：Integrate the functions of check.py and repair.py.specially,the re
 function can work in only this scenario: The first field does not appear to have 
 newline characters,otherwise it can't be detemined whether the rows that the number 
 of the separators is zero is belong to the previous row or the latter one.That is a 
-logical trap.
+logical trap.Besides,the replace def can run only once a time,and check def
+can run only twice a time.If the file still wrong,then just warn.
 
 Parameters: Text name with absolute path;The correct number of database table fields;
 separator character.For example:
@@ -21,6 +22,7 @@ Bugs: In Some scenarios there is some problems,when using it please be careful:
       the check function.Maybe some other character too.  
       2.when more than one fields exist newline characters in one row,the repair 
       function can't support it.
+
 
 First code date：2017-01-23
 
@@ -99,58 +101,44 @@ def  replaceLines(fileName,checkNum,splitStr):
             firstFlag=0
 
         elif line.count(splitStr) < checkNum and line.count(splitStr) > 0:
-            #分隔符为大于0时，可以判定前面那行可以写进去（即使不等于checkNum，上一行也已经正确
-            writeFlag=1
+            writeFlag=1#When the number of separators is greater than 0, the previous line can be printed
             newLine=tempLine
             if(skipFlag==0):
-                #只出现一个字段多个换行的时候
-                #出现多个换行符的时候，下一行
+                #when  more than one newLine characters exists in one field
                 if(downEndFlag==0):
                     tempLine=line.replace("\n","")+getDownLine(fileName,lineNumber)
                     if(tempLine.count(splitStr)!=checkNum):
-                        #第一次合并了下一行后检查还是不够，说明还存在分隔符，需要跟下一行合并
-                        '''print "STILL WRONG"'''#调试用代码
+                        #after once merge,the number is still wrong,that means it nead to merge next line
+                        #print "STILL WRONG" #debug
                         downEndFlag=1
                         firstFlag=1
-                #下一行要跳过
+                #skip next line 
                 skipFlag=1
                 middleFlag=0    
             else:
-                #其实，当该字段出现多个换行符时，最后一个在替换前的skipFlag状态位一定是：1，因为其他换行符的处理都在第一个if流程里走了 未重置skipFlag
-                #因此最后一步替换可以放在skipFlag=1的情况下处理，处理完再判断downEndFlag
-                #该行跳过打印，但当 if(downEndFlag==1)时，还是要把本行并到tempLine里去的  
-                """if(downEndFlag==1):
-                    tempLine=tempLine+line.replace("\n","")
-                    #如果这次合并之后没问题了  downEndFlag就置0
-                    if(tempLine.count(splitStr)==checkNum):
-                        print "合并分隔符个数对了"
-                        downEndFlag=0"""
-                #一个字段多次换行的情况，最后一次就走这里那必然分隔符是对的了
                 if(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)==checkNum):
                     tempLine=tempLine+line.replace("\n","")
-                    '''print " ONE COLUMN CHANGE RIGHT"'''#调试用代码
+                    #print " ONE COLUMN CHANGE RIGHT" #debug
                     downEndFlag=0
-                #多字段存在分隔符情况,依据是合并后的分隔符还是不能跟检查值匹配，但还是有漏洞
                 elif(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)!=checkNum):
                     tempLine=tempLine+getDownLine(fileName,lineNumber)
                     if(tempLine.count(splitStr)==checkNum):
-                        '''print " MUTTLE COLUMNS RIGHT"'''#调试用代码
+                        #print " MUTTLE COLUMNS RIGHT"  #debug
                         downEndFlag=0
                     else:
-                        '''print " MUTTLE COLUMNS STILL WRONG"'''#调试用代码
+                        #print " MUTTLE COLUMNS STILL WRONG" #debug
                         downEndFlag=1
                 #output open 
                 skipFlag=0
                 middleFlag=1
         elif line.count(splitStr)==checkNum:
-            #分隔符为大于0时，可以判定前面那行可以写进去（即使不等于checkNum，上一行也已经正确
-            writeFlag=1
+            writeFlag=1  #When the number of separators is greater than 0, the previous line can be printed
             newLine=tempLine
             tempLine=line.replace("\n","")
             middleFlag=0
         else:
             pass
-        #Only can be print when satisfy all condition
+        #Only can be printed when satisfy all condition
         '''
         #debug
         print "writeFlag:"+str(writeFlag)
@@ -162,7 +150,7 @@ def  replaceLines(fileName,checkNum,splitStr):
         print "newLine:"+newLine
         print "tempLine:"+tempLine
         print "line:" +line'''
-        #打印中间结果，第一行因为newline还没有值不打印
+        #print middle result, skip the first line
         if(writeFlag==1 and lineNumber>0 and middleFlag==0):
             '''print "MIDDLE PUTLINE newLine:"+newLine'''
             targetFile.write(newLine+"\n")
@@ -181,7 +169,7 @@ def  replaceLines(fileName,checkNum,splitStr):
     os.rename(fileName, os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".delete")
     os.rename(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change", fileName)
 
-#函数5，获取对应行数的下一行数据
+#def five:get next line 
 def getDownLine(fileName,errorLine):
     checkFile=open(fileName)
     line=checkFile.readlines()[errorLine+1]
@@ -194,32 +182,32 @@ def main():
     checkNum=int(sys.argv[2])
     splitStr=sys.argv[3]
 
-    #checkNum minus one
+    #the number of separators is equal to the number of fields minus 1
     checkNum=checkNum-1
 
-    #确定输入的是文件名
+    #确定输入的是文件名 make sure file name 
     if(os.path.isfile(fileName)): 
-        #1.0检查文件是否为空文件，空文件无需再检查直接退出
+        #1.0 if the file is empty,exit  
         noneFlag=checkFileNull(fileName)
         if noneFlag==1:
             print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[INFO]The file is null!"
             sys.exit(0)
-        #2.0Determine whether the number of separators is correct in the first row. 
+        #2.0 Determine whether the number of separators is correct in the first row. 
         #if not,Exit and output error messages 
         realNum=checkFirstLine(fileName,checkNum,splitStr)
         if realNum!=checkNum:
             print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum+1))
             sys.exit(1)
-        #3.0检查每行字段个数是否正确
+        #3.0 Determine whether the number of separators is correct in every rows
         resultDict=checkLines(fileName,checkNum,splitStr)
-        #4.0 返回正确结果
+        #4.0 return the right result
         if resultDict['checkFlag']==0:
             print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[INFO]The checked result is right,actual number is %d"%(int(resultDict['splitNumber'])+1))
             sys.exit(0)
         else:
-            #调用替换函数
+            #call the replace function 
             replaceLines(fileName,checkNum,splitStr)
-            #文件继续检查
+            #countinue to check 
             resultDictNew=checkLines(fileName,checkNum,splitStr)
             if resultDictNew['checkFlag']==0:
                 print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[INFO]After replace operate,the checked result is right,actual number is %d"%(int(resultDictNew['splitNumber'])+1))
