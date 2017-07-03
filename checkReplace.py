@@ -20,12 +20,11 @@ python checkReplace.py  /mdp/odm/kn/kn_kna_acct.txt 20 ~@~
 Bugs: In Some scenarios there is some problems,when using it please be careful:
       1.when used in linux environment, separator character ~ can't be support by 
       the check function.Maybe some other character too.  
-      2.when more than one fields exist newline characters in one row,the repair 
-      function can't support it.
+
 
 First code date：2017-01-23
 
-Last update : 2017-06-17
+Last update : 2017-07-03
 
 Author: duwj@sunline.cn
 '''
@@ -53,8 +52,10 @@ def  checkFirstLine(fileName,checkNum,splitStr):
 def  checkLines(fileName,checkNum,splitStr):
 #def three:Determine whether the number of separators is correct in every rows
     checkFile=open(fileName)
+
     lineNumber=0
     lines=checkFile.readlines()
+
     for line in lines:
         if not line:
             break
@@ -77,89 +78,117 @@ def  replaceLines(fileName,checkNum,splitStr):
     targetFile=open(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change",'w')
     lines=checkFile.readlines()
     lineNumber=0
-     
-    writeFlag=0 #First write off  
-    tempLine = "" #template line to merge the previous row and the wrong row
-    skipFlag=0 #whether skip the next line or not,first not 
-    middleFlag=0 #whether output the templine or not, first not 
-    downEndFlag=0 #whether multple newLine characters exist in one of the centre fields or not, first not
-    firstFlag=0 #whether need to output in first time when multple newLine characters exist in the centre fields
-
+    linesNumber=len(lines)
+    
+    writeFlag=0 #写标识 1为可写
+    tempLine = "" #临时组装行，也是上一行
+    writeLine = "" #会写入的值
+    readLines=[]
+    lineNumberInner=0
     for line in lines:
         if not line:
-            break
+            pass
+        elif lineNumber == linesNumber:
+            pass
         elif line.count(splitStr)==0:
-            writeFlag=0 #the number of separator is 0,that means the previous row is not right,can't be output
-
-            #merge the previous row and this row
-            #when it is multple newLine characters in the centre fields maked it's  number of separator
-            #is zero.It still can't be output now.Otherwise it cause data duplication.
-            if(firstFlag==0):
+            if lineNumber < lineNumberInner:
+                tempLine="" #清空tempLine
+                pass
+            else:
+                #该行为0，则只要单纯的把该行并入到上一行
                 tempLine=tempLine+line.replace("\n","")
-            middleFlag=0
-            firstFlag=0
+
+                #如果这行满足分隔符条件
+                if tempLine.count(splitStr)==checkNum:
+                    #只要下一行不是单字符的，可以写入;否则就过，继续合并
+                    if getNextLine(fileName,lineNumber).count(splitStr)>0:
+                        writeLine=tempLine
+                        writeFlag=1
+                    else:
+                        pass
 
         elif line.count(splitStr) < checkNum and line.count(splitStr) > 0:
-            writeFlag=1#When the number of separators is greater than 0, the previous line can be printed
-            newLine=tempLine
-            if(skipFlag==0):
-                #when  more than one newLine characters exists in one field
-                if(downEndFlag==0):
-                    tempLine=line.replace("\n","")+getDownLine(fileName,lineNumber)
-                    if(tempLine.count(splitStr)!=checkNum):
-                        #after once merge,the number is still wrong,that means it nead to merge next line
-                        #print "STILL WRONG" #debug
-                        downEndFlag=1
-                        firstFlag=1
-                #skip next line 
-                skipFlag=1
-                middleFlag=0    
+            #这行既不是合法的也不是单字符的，说明有截断
+            #截断的数据考虑怎么弄呢，就是将他们恢复后存到一个临时租赁里，不写入，最后再写
+
+            tempLine = line.replace("\n","")
+            #如果该行被合并过，最好是跳过它
+            if lineNumber < lineNumberInner:
+                #print "lineNumberInner:"+str(lineNumberInner)
+                tempLine="" #清空tempLine 
+                pass
             else:
-                if(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)==checkNum):
-                    tempLine=tempLine+line.replace("\n","")
-                    #print " ONE COLUMN CHANGE RIGHT" #debug
-                    downEndFlag=0
-                elif(downEndFlag==1 and tempLine.count(splitStr) + line.count(splitStr)!=checkNum):
-                    tempLine=tempLine+getDownLine(fileName,lineNumber)
-                    if(tempLine.count(splitStr)==checkNum):
-                        #print " MUTTLE COLUMNS RIGHT"  #debug
-                        downEndFlag=0
-                    else:
-                        #print " MUTTLE COLUMNS STILL WRONG" #debug
-                        downEndFlag=1
-                #output open 
-                skipFlag=0
-                middleFlag=1
+                lineNumberInner=lineNumber
+                while lineNumberInner < linesNumber:
+                    if getNextLine(fileName,lineNumberInner).count(splitStr)==checkNum:
+                        break
+                    else: 
+                        #如果连续两行都出现换行的情况需要考虑
+                        if tempLine.count(splitStr) == checkNum:
+                            if getNextLine(fileName,lineNumberInner).replace("\n","").count(splitStr)==0:
+                                tempLine=tempLine+getNextLine(fileName,lineNumberInner).replace("\n","")
+                                lineNumberInner=lineNumberInner+1                           
+                            else:
+                                #加1后再跳出
+                                lineNumberInner=lineNumberInner+1
+                                break
+                        else:
+                            tempLine=tempLine+getNextLine(fileName,lineNumberInner).replace("\n","")
+                            lineNumberInner=lineNumberInner+1
+                      
+                if tempLine.count(splitStr) == checkNum:
+                    readLine=tempLine
+                    readLines.append(readLine)
+                else:
+                    pass
         elif line.count(splitStr)==checkNum:
-            writeFlag=1  #When the number of separators is greater than 0, the previous line can be printed
-            newLine=tempLine
+            #writeFlag=1  #When the number of separators is greater than 0, the previous line can be printed
             tempLine=line.replace("\n","")
-            middleFlag=0
+            #如果下一行没有单个字符，也就是下一行至少有一个分隔符，那么这行就可以写入了
+            if getNextLine(fileName,lineNumber).count(splitStr)>0 :
+                writeLine=tempLine
+                writeFlag=1
+            #说明下一行是该行的一部分，不能写入
+            else:
+                writeFlag=0
         else:
             pass
         #Only can be printed when satisfy all condition
         '''
         #debug
-        print "writeFlag:"+str(writeFlag)
-        print "lineNumber:"+str(lineNumber)
-        print "downEndFlag:"+str(downEndFlag)
-        print "skipFlag:"+str(skipFlag)
-        print "middleFlag:"+str(middleFlag)
-        print "firstFlag:"+str(firstFlag)
-        print "newLine:"+newLine
+        print "writeFlag:"+str(writeFlag) +" = 1"
+        print "OUTER-lineNumber:"+str(lineNumber) +" > 0 "
+        print "writeLine:"+writeLine
         print "tempLine:"+tempLine
-        print "line:" +line'''
-        #print middle result, skip the first line
-        if(writeFlag==1 and lineNumber>0 and middleFlag==0):
-            '''print "MIDDLE PUTLINE newLine:"+newLine'''
-            targetFile.write(newLine+"\n")
+        print "line:" +line
+        #'''
+
+        if(writeFlag==1):
+            '''print "==================================="
+            print "write line:"+writeLine
+            print "now lineNumber = " +str(lineNumber)
+            print "==================================="'''
+            targetFile.write(writeLine+"\n")
             #back to 0 
             writeFlag=0
         lineNumber=lineNumber+1
-    #Output the last line.
-    '''print "LAST PUTLINE tempLine:"+tempLine''' #debug
-    targetFile.write(tempLine+"\n")
+    #把错误行都写进去
+    for line in readLines:
+        targetFile.write(line+"\n")
 
+    #Output the last line.
+    lastLine=tempLine
+    if lastLine == writeLine or lastLine.count(splitStr)<checkNum:
+        pass
+    else:
+        '''print "==================================="
+        print "write last line:"+lastLine
+        print "now lineNumber = " +str(lineNumber)
+        print "==================================="'''
+        targetFile.write(lastLine+"\n")
+
+
+    print "The changed lines:" +str(readLines)
     checkFile.close()
     targetFile.close()
     #replace file
@@ -169,12 +198,17 @@ def  replaceLines(fileName,checkNum,splitStr):
     os.rename(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change", fileName)
 
 #def five:get next line 
-def getDownLine(fileName,errorLine):
+def getNextLine(fileName,errorLine):
     checkFile=open(fileName)
-    line=checkFile.readlines()[errorLine+1]
-    line=line.replace("\n", "")
-    checkFile.close()
+    line=""
+    try:
+        line=checkFile.readlines()[errorLine+1]
+        line=line.replace("\n", "")
+        checkFile.close()
+    except:
+        print "It's last line,lineNumber="+str(errorLine+1)
     return line
+
 
 def main():
     fileName=sys.argv[1]
@@ -213,6 +247,7 @@ def main():
                 sys.exit(0)
             else:
                 print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]After replace operate,the actual number is still wrong!"
+                print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]The number of the wrong line is " +str(resultDictNew['lineNumber'])
                 sys.exit(1)
     else:
         print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]The file not exists!"

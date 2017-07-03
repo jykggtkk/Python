@@ -1,13 +1,25 @@
-insert~@~ni~@~thaedi ~@~dafe~@~dsff~@~12~@~2121
-insert~@~ni~@~thaedi ~@~dafe~@~dsff~@~12~@~2121
-insert~@~ni~@~tha 
-edi ~@~dafe~@~dsff~@~12~@~2121
-insert~@~ni~@~thaedi ~@~dafe~@~dsff~@~12~@~2121
-insert~@~ni~@~thaedi ~@~dafe~@~ds
-f
-f~@~12~@~2121
-insert~@~ni~@~thaedi ~@~dafe~@~dsff~@~12~@~2121
-insert~@~ni~@~thaedi ~@~dafe~@~dsff~@~12~@~212
-1
-ins
-ert~@~ni~@~thaedi ~@~dafe~@~dsff~@~12~@~2121
+insert~@~ni3~@~thaedi3~@~dafe3~@~dsff3~@~11~@~54321
+update~@~ni2~@~thaedi2~@~dafe2~@~dsff2~@~15~@~123456
+merge~@~ni4~@~thaed
+ab
+i4~@~da
+fe
+4~@~dsa
+f4~@~44~@~2311
+
+
+
+
+11
+delete~@~ni3~@~thaed
+i3~@~dafe3~@~dsff3~@~11~@~54
+
+
+
+123
+
+
+truncate~@~ni2~@~thaedi2~@~dafe2~@~dsff2~@~15~@~23
+
+
+
