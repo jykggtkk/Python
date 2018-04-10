@@ -1,5 +1,0 @@
-2018-04-10 17:11:34[ERROR]The  test-nofile.txt file  not exists!
-2018-04-10 17:11:34[WARNING]The test-null.txt file is null!
-2018-04-10 17:11:34[INFO]The test-right.txt file checked result is right,actual number is 7
-2018-04-10 17:11:34[INFO]After replace operate,the test-replace-right.txt file checked result is right,actual number is 7
-2018-04-10 17:11:36[INFO]After replace operate,the test-replace-wrong.txt file checked result is right,actual number is 7

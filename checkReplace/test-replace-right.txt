@@ -1,5 +1,10 @@
-insert~@~ni3~@~thaedi3~@~dafe3~@~dsff3~@~11~@~54321
-update~@~ni2~@~thaedi2~@~dafe2~@~dsff2~@~15~@~123456
+insert~@~ni3~@~thaedi3~@~dafe3~@~dsff3~@~11~@~543
+21
+update~@~n
+i2~@~thaedi2~@~daf
+e2~@~dsff2~@~15~@~123
+4
+56
 merge~@~ni4~@~thaed
 ab
 i4~@~da
@@ -17,8 +22,12 @@ i3~@~dafe3~@~dsff3~@~11~@~54
 
 
 123
-
-
-truncate~@~ni2~@~thaedi2~@~dafe2~@~dsff2~@~15~@~23
+truncate~@~ni2~@~thaedi2~@~
+dafe2~@~dsff2~@~15~@~23
 
 5
+drop~@~ni3~@~thaedi3~@~dafe3~@~tes
+tc~@~11~@~907
+
+60
+7
