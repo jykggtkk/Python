@@ -1,0 +1,6 @@
+insert~@~ni3~@~thaedi3~@~dafe3~@~dsff3~@~11~@~54321
+update~@~ni2~@~thaedi2~@~dafe2~@~dsff2~@~15
+truncate~@~ni2~@~thaedi2~@~d
+afe2~@~dsff2~@~1
+merge~@~ni4~@~thaedabi4~@~dafe4~@~dsaf4~@~44~@~231111
+delete~@~ni3~@~thaedi3~@~dafe3~@~dsff3~@~11~@~54123

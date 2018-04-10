@@ -1,36 +1,34 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 '''
-Script function: Check the data text,determine the number of fields in every rows 
-whether can match the number of database table fields or not.In some scenarios can 
-repair the data text by merging rows.finally if it can't be repaired then output 
-the error messages.
+Script function: 检查文本确保其每行（每条记录）的字段个数跟实际数据库表的字段个数是一致的，
+如不一致可以做一定处理消除多余的换行符,使文本每行字段个数与数据库表变为一致。
 
-Instruction：Integrate the functions of check.py and repair.py.specially,the repair
-function can work in only this scenario: The first field does not appear to have 
-newline characters,otherwise it can't be detemined whether the rows that the number 
-of the separators is zero is belong to the previous row or the latter one.That is a 
-logical trap.Besides,the replace def can run only once a time,and check def
-can run only twice a time.If the file still wrong,then just warn.
+Instruction：整合检查和替换两块的功能.替换功能只能在一定前提下工作：
+    1.换行符作为记录的分隔符
+    2.默认第一个字段不会出现换行,否则无法判断多出来的数据是归属上一行还是下一行的
+    3.替换操作只能做一次，一遍替换后仍检查出错必须抛异常去人工反馈错误
 
-Parameters: Text name with absolute path;The correct number of database table fields;
-separator character.For example:
+Parameters: 全路径文本名称；校验的字段个数；分隔符；
+For example:
 python checkReplace.py  /mdp/odm/kn/kn_kna_acct.txt 20 ~@~
 
-Bugs: In Some scenarios there is some problems,when using it please be careful:
-      1.when used in linux environment, separator character ~ can't be support by 
-      the check function.Maybe some other character too.  
+Requirement: logging模块   pip install logging
+Bugs: 在某些场景下使用需要注意:
+      1.在Linux环境下，分隔符'~'不被支持，无法检查出错误，也许某些其他分隔符也不行。
+      2.目前如果文本本身某些行确实缺字段，在替换时会删掉这些缺字段的行导致它校验通过，正在解决
 
 
 First code date：2017-01-23
 
-Last update : 2017-07-03
+Last update : 2018-04-10
 
 Author: duwj@sunline.cn
 '''
 import sys
 import os
 import time
+import logging
 
 def  checkFileNull(fileName):
 #def one:Determines whether the text is empty
@@ -74,17 +72,23 @@ def  checkLines(fileName,checkNum,splitStr):
 
 def  replaceLines(fileName,checkNum,splitStr):
 #def four:Merge the wront rows, then call def checkLines to check the new file
+    #读取文件内容
     checkFile=open(fileName)
-    targetFile=open(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change",'w')
     lines=checkFile.readlines()
-    lineNumber=0
-    linesNumber=len(lines)
-    
-    writeFlag=0 #写标识 1为可写
+    #初始化新的文本
+    targetFile=open(os.path.dirname(fileName)+os.path.basename(fileName).split(".")[0]+".change",'w')
+
+    #初始参数
+    lineNumber=0#初始行数
+    linesNumber=len(lines)#总行数
     tempLine = "" #临时组装行，也是上一行
-    writeLine = "" #会写入的值
-    readLines=[]
-    lineNumberInner=0
+    writeLine = "" #要写入的行
+    changeLines=[]  #所有合并修改后的文本行
+    lineNumberInner=0 #同一行被隔断成多个行时，使用该参数标记内部行数
+
+    #判断位
+    writeFlag=0 #写标识 1为可写
+
     for line in lines:
         if not line:
             pass
@@ -138,7 +142,7 @@ def  replaceLines(fileName,checkNum,splitStr):
                       
                 if tempLine.count(splitStr) == checkNum:
                     readLine=tempLine
-                    readLines.append(readLine)
+                    changeLines.append(readLine)
                 else:
                     pass
         elif line.count(splitStr)==checkNum:
@@ -154,26 +158,23 @@ def  replaceLines(fileName,checkNum,splitStr):
         else:
             pass
         #Only can be printed when satisfy all condition
-        '''
-        #debug
-        print "writeFlag:"+str(writeFlag) +" = 1"
-        print "OUTER-lineNumber:"+str(lineNumber) +" > 0 "
-        print "writeLine:"+writeLine
-        print "tempLine:"+tempLine
-        print "line:" +line
-        #'''
+        logging.debug("writeFlag:"+str(writeFlag) +" = 1")
+        logging.debug("OUTER-lineNumber:"+str(lineNumber) +" > 0 ")
+        logging.debug("writeLine:"+writeLine)
+        logging.debug("tempLine:"+tempLine)   
+        logging.debug("line:" +line)   
 
         if(writeFlag==1):
-            '''print "==================================="
-            print "write line:"+writeLine
-            print "now lineNumber = " +str(lineNumber)
-            print "==================================="'''
+            logging.debug("===================================")
+            logging.debug("write line:"+writeLine)
+            logging.debug("now lineNumber = " +str(lineNumber))
+            logging.debug("===================================")                
             targetFile.write(writeLine+"\n")
             #back to 0 
             writeFlag=0
         lineNumber=lineNumber+1
     #把错误行都写进去
-    for line in readLines:
+    for line in changeLines:
         targetFile.write(line+"\n")
 
     #Output the last line.
@@ -181,14 +182,15 @@ def  replaceLines(fileName,checkNum,splitStr):
     if lastLine == writeLine or lastLine.count(splitStr)<checkNum:
         pass
     else:
-        '''print "==================================="
-        print "write last line:"+lastLine
-        print "now lineNumber = " +str(lineNumber)
-        print "==================================="'''
+        logging.debug("===================================")
+        logging.debug("write last line:"+lastLine)
+        logging.debug("now lineNumber = " +str(lineNumber))
+        logging.debug("===================================")        
         targetFile.write(lastLine+"\n")
 
 
-    print "The changed lines:" +str(readLines)
+    #print "The changed lines:" +str(changeLines)
+    logging.debug("The changed lines:" +str(changeLines))
     checkFile.close()
     targetFile.close()
     #replace file
@@ -206,7 +208,8 @@ def getNextLine(fileName,errorLine):
         line=line.replace("\n", "")
         checkFile.close()
     except:
-        print "It's last line,lineNumber="+str(errorLine+1)
+        logging.debug("It's last line,lineNumber="+str(errorLine+1))
+        #print "It's last line,lineNumber="+str(errorLine+1)
     return line
 
 
@@ -223,19 +226,19 @@ def main():
         #1.0 if the file is empty,exit  
         noneFlag=checkFileNull(fileName)
         if noneFlag==1:
-            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[INFO]The file is null!"
+            logging.warning("The "+str(fileName)+" file is null!")
             sys.exit(0)
         #2.0 Determine whether the number of separators is correct in the first row. 
         #if not,Exit and output error messages 
         realNum=checkFirstLine(fileName,checkNum,splitStr)
         if realNum!=checkNum:
-            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[ERROR]The checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum+1))
+            logging.error(str("The "+str(fileName)+" file checked result is wrong,correct number should be %d,but the actual number is %d"%(checkNum+1,realNum+1)))
             sys.exit(1)
         #3.0 Determine whether the number of separators is correct in every rows
         resultDict=checkLines(fileName,checkNum,splitStr)
         #4.0 return the right result
         if resultDict['checkFlag']==0:
-            print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[INFO]The checked result is right,actual number is %d"%(int(resultDict['splitNumber'])+1))
+            logging.info(str("The "+str(fileName)+" file checked result is right,actual number is %d"%(int(resultDict['splitNumber'])+1)))
             sys.exit(0)
         else:
             #call the replace function 
@@ -243,18 +246,24 @@ def main():
             #countinue to check 
             resultDictNew=checkLines(fileName,checkNum,splitStr)
             if resultDictNew['checkFlag']==0:
-                print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+str("[INFO]After replace operate,the checked result is right,actual number is %d"%(int(resultDictNew['splitNumber'])+1))
+                logging.info(str("After replace operate,the "+str(fileName)+" file checked result is right,actual number is %d"%(int(resultDictNew['splitNumber'])+1)))
                 sys.exit(0)
             else:
-                print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]After replace operate,the actual number is still wrong!"
-                print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]The number of the wrong line is " +str(resultDictNew['lineNumber'])
+                logging.error("After replace operate,the "+str(fileName)+" file actual number is still wrong! The number of the wrong line is"+str(resultDictNew['lineNumber']))
                 sys.exit(1)
     else:
-        print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]The file not exists!"
+        #print str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))+"[ERROR]The file not exists!"
+        logging.error("The "+str(fileName)+" file not exists!")
         sys.exit(1)
 
 if __name__ == '__main__': 
-    #Setting environment character set
+    #初始化环境字符集
     reload(sys)
     sys.setdefaultencoding('utf8')
+
+    #初始化日志配置
+    LOG_FORMAT = "%(asctime)s[%(levelname)s]%(message)s"
+    DATE_FORMAT = '%Y-%m-%d %H:%M:%S' 
+    logging.basicConfig(filename='test.log',level=logging.INFO, format=LOG_FORMAT, datefmt=DATE_FORMAT)
+
     main()
