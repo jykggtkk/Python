@@ -3,6 +3,8 @@
 import random
 import sys
 import datetime 
+from time import ctime,sleep
+
 
 acctnoarr=[]
 datearr=[]
@@ -10,20 +12,20 @@ tranbrarr=['001001','001002','001003','001004','001005']
 trantparr=['CS','TR']
 
 
-#è·å–è´¦å·åˆ—è¡¨
+#»ñÈ¡ÕËºÅÁĞ±í
 def getAcctnoArr():
-    for i in range(1000):
+    for i in range(10000):
         acctno= '6213'+str(random.randint(100000000000,99999999999999))
         acctnoarr.append(acctno)
 
-#è·å–æµæ°´å·åˆ—è¡¨
+#»ñÈ¡Á÷Ë®ºÅÁĞ±í
 def getTransqArr():
     randomdata = range(10000000,99999999)  
-    randomlist  = random.sample(randomdata,100) #å®é™…æ¯å¤©éœ€è¦100w
+    randomlist  = random.sample(randomdata,100000) #Êµ¼ÊÃ¿ÌìĞèÒª100w
     
     return  randomlist
 
-#è·å–æ—¶é—´åˆ—è¡¨
+#»ñÈ¡Ê±¼äÁĞ±í
 def getDate():
     begin = datetime.date(2017,6,1)  
     end = datetime.date(2017,6,1)
@@ -33,54 +35,60 @@ def getDate():
         d.strftime("%Y%m%d")
         datearr.append(d.strftime("%Y%m%d"))
         d += delta
-#ä¸»æ–¹æ³•
+#Ö÷·½·¨
 def main():
-    getAcctnoArr()
-    getDate()
- 
-    #print acctnoarr
-    #print datearr
-    #print  len(transqarr)
 
+    #Êı¾İÎÄ¼şÃû³Æ
+    resultFile="kn_kns_tran"
+    getAcctnoArr()
+    getDate()  
     for date in datearr:
         i=1
-        #ç”Ÿæˆéšæœºæµæ°´å·
+        #´ò¿ªÒ»¸ö´ıĞ´ÈëµÄÎÄ¼ş
+        file=open(resultFile+str(date)+".txt",'a+')
+        #Éú³ÉËæ»úÁ÷Ë®ºÅ
         transqarr=getTransqArr()
-        #ç”Ÿæˆ100æ¡æ•°æ®
-        while i<=10:
-            #è·å–æ—¥æœŸ
+        #Éú³ÉNÌõÊı¾İ
+        while i<=10000:
+            #»ñÈ¡ÈÕÆÚ
             trandt=date
-            #è·å–æµæ°´å·
+            #»ñÈ¡Á÷Ë®ºÅ
+            #print "i"+str(i)
+            #print len(transqarr)
             transq=random.choice(transqarr)
             transqarr.remove(transq)
-            #è·å–æ—¶é—´
+            #»ñÈ¡Ê±¼ä
             tranti=str(random.randint(0,23))+str(random.randint(10,60))+str(random.randint(10,60))
             if len(tranti)<6:
                 tranti ='0'+tranti
             else:
                 pass
 
-            #è·å–äº¤æ˜“ç§ç±»
+            #»ñÈ¡½»Ò×ÖÖÀà
             trantp =random.choice(trantparr)
 
-            #è·å–äº¤æ˜“éƒ¨é—¨
+            #»ñÈ¡½»Ò×²¿ÃÅ
             tranbr =random.choice(tranbrarr)
-            #è·å–äº¤æ˜“å¸ç§
+            #»ñÈ¡½»Ò×±ÒÖÖ
             crcycd='01'
-            #è·å–äº¤æ˜“é‡‘é¢
+            #»ñÈ¡½»Ò×½ğ¶î
             tranam=round(random.uniform(0, 99999),2)
-            #è·å–äº¤æ˜“è´¦å·
+            #»ñÈ¡½»Ò×ÕËºÅ
             acctno=random.choice(acctnoarr)
-            #è·å–äº¤æ˜“å¯¹æ‰‹æ–¹è´¦å·
+            #»ñÈ¡½»Ò×¶ÔÊÖ·½ÕËºÅ
             toacct=random.choice(acctnoarr)
             if toacct==acctno:
                 toacct=random.choice(acctnoarr)
 
-            print str(trandt)+"~@~"+str(transq)+"~@~"+str(tranti)+"~@~"+str(trantp)+"~@~"+str(tranbr)+"~@~"+str(crcycd)+"~@~"+str(tranam)+"~@~"+str(acctno)+"~@~"+str(toacct)+"\n" 
-
+            file.write(str(trandt)+"~"+str(transq)+"~"+str(tranti)+"~"+str(trantp)+"~"+str(tranbr)+"~"+str(crcycd)+"~"+str(tranam)+"~"+str(acctno)+"~"+str(toacct)+"\n")
+            i=i+1
+        #Íê³Éºó¹Ø±ÕÎÄ¼ş
+        file.close()
 
 if __name__ == '__main__': 
-    #è®¾ç½®ç¯å¢ƒç¼–ç 
+    #ÉèÖÃ»·¾³±àÂë
     reload(sys)
     sys.setdefaultencoding('utf8')
+    print "begin: %s" %ctime()
     main()
+    print "all over %s" %ctime()
