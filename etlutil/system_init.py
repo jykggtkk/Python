@@ -63,12 +63,14 @@ def tab_sql(cols):
 			pass
 	txts=','.join(txt)
 	keys=','.join(key)
-	#print table+","+keys
+	#print table+","+txts
 	#创建有主键和无主键
 	if keys!="":
-		sql ="create table "+table+"("+txts+","+ "CONSTRAINT AUTH_GROUP_PERMISSIONS_PK PRIMARY KEY ("+keys+"));"
+		sql ="create table "+table+"("+txts+","+ "CONSTRAINT pk_"+table+" PRIMARY KEY ("+keys+"));"
 	else:
 		sql="create table "+table+"("+txts+");"
+	logging.debug(sql)
+
 	return sql
     
 
