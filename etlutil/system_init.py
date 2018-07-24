@@ -13,11 +13,11 @@ from openpyxl import load_workbook
 import sqlite3
 import logging
 
-def main():
+def system_init():
 
     #初始化建表
     logging.info( "Creating sqlite tables.")
-    wb = load_workbook(filename='system_init.xlsx', read_only=True)
+    wb = load_workbook(filename='c:\\git\\Python\\etlutil\\system_init.xlsx', read_only=True)
     ws = wb['meta_dict']
     
     #表清单-去重复
@@ -42,8 +42,8 @@ def main():
         #执行SQL
         logging.debug( "Table "+table+" init sql are being executed...... ")
         tab_init(table,sql)
-        logging.info( "Table "+table+" has been create. ")
-    logging.info( "ALL sqlite tables have been create. ")
+        logging.info( "Table "+table+" has been created. ")
+    logging.info( "ALL sqlite tables have been created. ")
     #插入初始化数据
 #组织sql
 def tab_sql(cols):
@@ -103,5 +103,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=DATE_FORMAT)
     logging.info( "Beginning init. ")
     
-    main()
+    system_init()
 

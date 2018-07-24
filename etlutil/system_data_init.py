@@ -3,7 +3,7 @@
 '''
 脚本功能：读取excel并将数据插入到sqlite数据表中
 输入参数：excel 
-初次编写日期：2017-04-24
+初次编写日期：2017-05-17
 说明：依照excel 插入各模板数据 
 '''
  
@@ -65,7 +65,6 @@ def system_data_init(file,tab):
 def get_cols(tab):
     try:
         cols=[]
-        #tab='meta_dict'
         conn = sqlite3.connect('system.sqlite3')
         sqlpre="PRAGMA table_info( "+tab+");"
         cursor = conn.execute(sqlpre)
