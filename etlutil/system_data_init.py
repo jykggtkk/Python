@@ -60,7 +60,7 @@ def system_data_init(file,tab):
     finally:
         conn.close()
 
-    logging.info( "ALL data tables have been insert into "+tab+". ")
+    logging.info( "ALL data  have been insert into "+tab+". ")
 
 def get_cols(tab):
     try:

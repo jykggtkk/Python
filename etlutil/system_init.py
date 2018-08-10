@@ -6,7 +6,7 @@
 初次编写日期：2017-04-24
 说明：依照excel配置初始化sqlite表结构，并插入各模板数据（插入待后续开发）
 '''
- 
+
 import os
 import sys
 from openpyxl import load_workbook
@@ -89,9 +89,10 @@ def tab_init(table,sql):
         #创建新表
         conn.execute(sql)
         conn.commit()
-        conn.close()
     except BaseException,err:
         logging.error("When creating table "+table+","+err.args)
+    finally:
+        conn.close()
 
 if __name__ == '__main__': 
     #设置环境编码
